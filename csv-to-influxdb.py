@@ -4,10 +4,13 @@ import gzip
 import argparse
 import csv
 import datetime
+from pytz import timezone
 
 from influxdb import InfluxDBClient
 
-epoch = datetime.datetime.utcfromtimestamp(0)
+epoch_naive = datetime.datetime.utcfromtimestamp(0)
+epoch = timezone('UTC').localize(epoch_naive)
+
 def unix_time_millis(dt):
     return int((dt - epoch).total_seconds() * 1000)
 
@@ -36,7 +39,7 @@ def isinteger(value):
 
 def loadCsv(inputfilename, servername, user, password, dbname, metric, 
     timecolumn, timeformat, tagcolumns, fieldcolumns, usegzip, 
-    delimiter, batchsize, create):
+    delimiter, batchsize, create, datatimezone):
 
     host = servername[0:servername.rfind(':')]
     port = int(servername[servername.rfind(':')+1:])
@@ -63,7 +66,10 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
     with open(inputfilename, 'r') as csvfile:
         reader = csv.DictReader(csvfile, delimiter=delimiter)
         for row in reader:
-            timestamp = unix_time_millis(datetime.datetime.strptime(row[timecolumn],timeformat)) * 1000000 # in nanoseconds
+            datetime_naive = datetime.datetime.strptime(row[timecolumn],timeformat)
+            datetime_local = timezone(datatimezone).localize(datetime_naive)
+
+            timestamp = unix_time_millis(datetime_local) * 1000000 # in nanoseconds
 
             tags = {}
             for t in tagcolumns:
@@ -147,6 +153,9 @@ if __name__ == "__main__":
     parser.add_argument('-tf', '--timeformat', nargs='?', default='%Y-%m-%d %H:%M:%S',
                         help='Timestamp format. Default: \'%%Y-%%m-%%d %%H:%%M:%%S\' e.g.: 1970-01-01 00:00:00')
 
+    parser.add_argument('-tz', '--timezone', default='UTC',
+                        help='Timezone of supplied data. Default: UTC')
+
     parser.add_argument('--fieldcolumns', nargs='?', default='value',
                         help='List of csv columns to use as fields, separated by comma, e.g.: value1,value2. Default: value')
 
@@ -162,4 +171,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     loadCsv(args.input, args.server, args.user, args.password, args.dbname, 
         args.metricname, args.timecolumn, args.timeformat, args.tagcolumns, 
-        args.fieldcolumns, args.gzip, args.delimiter, args.batchsize, args.create)
+        args.fieldcolumns, args.gzip, args.delimiter, args.batchsize, args.create, 
+        args.timezone)
