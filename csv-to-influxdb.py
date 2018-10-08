@@ -34,16 +34,20 @@ def isinteger(value):
             return False
 
 
-def loadCsv(inputfilename, servername, user, password, dbname, metric, timecolumn, timeformat, tagcolumns, fieldcolumns, usegzip, delimiter, batchsize):
+def loadCsv(inputfilename, servername, user, password, dbname, metric, 
+    timecolumn, timeformat, tagcolumns, fieldcolumns, usegzip, 
+    delimiter, batchsize, drop):
 
     host = servername[0:servername.rfind(':')]
     port = int(servername[servername.rfind(':')+1:])
     client = InfluxDBClient(host, port, user, password, dbname)
 
-    #print('Deleting database %s'%dbname)
-    #client.drop_database(dbname)
-    #print('Creating database %s'%dbname)
-    #client.create_database(dbname)
+    if drop == True:
+        print('Deleting database %s'%dbname)
+        client.drop_database(dbname)
+        print('Creating database %s'%dbname)
+        client.create_database(dbname)
+
     client.switch_user(user, password)
 
     # format tags and fields
@@ -131,6 +135,9 @@ if __name__ == "__main__":
     parser.add_argument('--dbname', nargs='?', required=True,
                         help='Database name.')
 
+    parser.add_argument('--drop', action='store_true', default=False,
+                        help='Drop database and create a new one.')
+
     parser.add_argument('-m', '--metricname', nargs='?', default='value',
                         help='Metric column name. Default: value')
 
@@ -155,4 +162,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     loadCsv(args.input, args.server, args.user, args.password, args.dbname, 
         args.metricname, args.timecolumn, args.timeformat, args.tagcolumns, 
-        args.fieldcolumns, args.gzip, args.delimiter, args.batchsize)
+        args.fieldcolumns, args.gzip, args.delimiter, args.batchsize, args.drop)
