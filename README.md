@@ -1,7 +1,7 @@
 # csv-to-influxdb
 Simple python script that inserts data points read from a csv file into a influxdb database.
-**WARNING**
-The database given via the --dbname parameter will drop the database first, then insert the csv data.
+
+To create a new database, specify the parameter ```--create```. This will drop any database with a name equal to the one supplied with ```--dbname```.
 
 ## Usage
 
@@ -27,6 +27,7 @@ optional arguments:
   -p [PASSWORD], --password [PASSWORD]
                         Password.
   --dbname [DBNAME]     Database name.
+  --create              Drop database and create a new one.
   -m [METRICNAME], --metricname [METRICNAME]
                         Metric column name. Default: value
   -tc [TIMECOLUMN], --timecolumn [TIMECOLUMN]
@@ -34,8 +35,6 @@ optional arguments:
   -tf [TIMEFORMAT], --timeformat [TIMEFORMAT]
                         Timestamp format. Default: '%Y-%m-%d %H:%M:%S' e.g.:
                         1970-01-01 00:00:00
-                        Timestamp format with milliseconds: '%Y-%m-%d %H:%M:%S.%f' e.g.:
-                        1970-01-01 00:00:00.000
   --fieldcolumns [FIELDCOLUMNS]
                         List of csv columns to use as fields, separated by
                         comma, e.g.: value1,value2. Default: value
@@ -45,6 +44,7 @@ optional arguments:
   -g, --gzip            Compress before sending to influxdb.
   -b BATCHSIZE, --batchsize BATCHSIZE
                         Batch size. Default: 5000.
+
 
 ```
 
