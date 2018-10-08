@@ -40,10 +40,10 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric, timecolum
     port = int(servername[servername.rfind(':')+1:])
     client = InfluxDBClient(host, port, user, password, dbname)
 
-    print('Deleting database %s'%dbname)
-    client.drop_database(dbname)
-    print('Creating database %s'%dbname)
-    client.create_database(dbname)
+    #print('Deleting database %s'%dbname)
+    #client.drop_database(dbname)
+    #print('Creating database %s'%dbname)
+    #client.create_database(dbname)
     client.switch_user(user, password)
 
     # format tags and fields
