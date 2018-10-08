@@ -42,7 +42,7 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
     port = int(servername[servername.rfind(':')+1:])
     client = InfluxDBClient(host, port, user, password, dbname)
 
-    if drop == True:
+    if(drop == True):
         print('Deleting database %s'%dbname)
         client.drop_database(dbname)
         print('Creating database %s'%dbname)
