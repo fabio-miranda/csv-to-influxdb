@@ -24,6 +24,15 @@ def isfloat(value):
         except:
             return False
 
+def isbool(value):
+    try:
+        return value.lower() in ('true', 'false')
+    except:
+        return False
+
+def str2bool(value):
+    return value.lower() == 'true'
+
 ##
 ## Check if data type of field is int
 ##
@@ -82,7 +91,12 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
             for f in fieldcolumns:
                 v = 0
                 if f in row:
-                    v = float(row[f]) if isfloat(row[f]) else row[f]
+                    if (isfloat(row[f])):
+                        v = float(row[f])
+                    elif (isbool(row[f])):
+                        v = str2bool(row[f])
+                    else:
+                        v = row[f]
                 fields[f] = v
 
 
