@@ -1,5 +1,4 @@
 import requests
-import json
 import gzip
 import argparse
 import csv
@@ -72,11 +71,15 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
     datapoints = []
     inputfile = open(inputfilename, 'r')
     count = 0
-    with open(inputfilename, 'r') as csvfile:
+    with inputfile as csvfile:
         reader = csv.DictReader(csvfile, delimiter=delimiter)
         for row in reader:
             datetime_naive = datetime.datetime.strptime(row[timecolumn],timeformat)
-            datetime_local = timezone(datatimezone).localize(datetime_naive)
+
+            if datetime_naive.tzinfo is None:
+                datetime_local = timezone(datatimezone).localize(datetime_naive)
+            else:
+                datetime_local = datetime_naive
 
             timestamp = unix_time_millis(datetime_local) * 1000000 # in nanoseconds
 
@@ -110,12 +113,11 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
                 print('Inserting %d datapoints...'%(len(datapoints)))
                 response = client.write_points(datapoints)
 
-                if response == False:
+                if not response:
                     print('Problem inserting points, exiting...')
                     exit(1)
 
-                print("Wrote %d, response: %s" % (len(datapoints), response))
-
+                print("Wrote %d points, up to %s, response: %s" % (len(datapoints), datetime_local, response))
 
                 datapoints = []
             
