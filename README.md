@@ -7,9 +7,10 @@ To create a new database, specify the parameter ```--create```. This will drop a
 
 ```
 usage: csv-to-influxdb.py [-h] -i [INPUT] [-d [DELIMITER]] [-s [SERVER]]
-                          [-u [USER]] [-p [PASSWORD]] --dbname [DBNAME]
-                          [-m [METRICNAME]] [-tc [TIMECOLUMN]]
-                          [-tf [TIMEFORMAT]] [--fieldcolumns [FIELDCOLUMNS]]
+                          [--ssl] [-u [USER]] [-p [PASSWORD]] --dbname
+                          [DBNAME] [--create] [-m [METRICNAME]]
+                          [-tc [TIMECOLUMN]] [-tf [TIMEFORMAT]] [-tz TIMEZONE]
+                          [--fieldcolumns [FIELDCOLUMNS]]
                           [--tagcolumns [TAGCOLUMNS]] [-g] [-b BATCHSIZE]
 
 Csv to influxdb.
@@ -22,6 +23,7 @@ optional arguments:
                         Csv delimiter. Default: ','.
   -s [SERVER], --server [SERVER]
                         Server address. Default: localhost:8086
+  --ssl                 Use HTTPS instead of HTTP.
   -u [USER], --user [USER]
                         User name.
   -p [PASSWORD], --password [PASSWORD]
@@ -35,6 +37,8 @@ optional arguments:
   -tf [TIMEFORMAT], --timeformat [TIMEFORMAT]
                         Timestamp format. Default: '%Y-%m-%d %H:%M:%S' e.g.:
                         1970-01-01 00:00:00
+  -tz TIMEZONE, --timezone TIMEZONE
+                        Timezone of supplied data. Default: UTC
   --fieldcolumns [FIELDCOLUMNS]
                         List of csv columns to use as fields, separated by
                         comma, e.g.: value1,value2. Default: value
@@ -44,7 +48,6 @@ optional arguments:
   -g, --gzip            Compress before sending to influxdb.
   -b BATCHSIZE, --batchsize BATCHSIZE
                         Batch size. Default: 5000.
-
 
 ```
 
