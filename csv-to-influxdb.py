@@ -47,11 +47,11 @@ def isinteger(value):
 
 def loadCsv(inputfilename, servername, user, password, dbname, metric, 
     timecolumn, timeformat, tagcolumns, fieldcolumns, usegzip, 
-    delimiter, batchsize, create, datatimezone):
+    delimiter, batchsize, create, datatimezone, usessl):
 
     host = servername[0:servername.rfind(':')]
     port = int(servername[servername.rfind(':')+1:])
-    client = InfluxDBClient(host, port, user, password, dbname)
+    client = InfluxDBClient(host, port, user, password, dbname, ssl=usessl)
 
     if(create == True):
         print('Deleting database %s'%dbname)
@@ -148,6 +148,9 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--server', nargs='?', default='localhost:8086',
                         help='Server address. Default: localhost:8086')
 
+    parser.add_argument('--ssl', action='store_true', default=False,
+                        help='Use HTTPS instead of HTTP.')
+
     parser.add_argument('-u', '--user', nargs='?', default='root',
                         help='User name.')
 
@@ -188,4 +191,4 @@ if __name__ == "__main__":
     loadCsv(args.input, args.server, args.user, args.password, args.dbname, 
         args.metricname, args.timecolumn, args.timeformat, args.tagcolumns, 
         args.fieldcolumns, args.gzip, args.delimiter, args.batchsize, args.create, 
-        args.timezone)
+        args.timezone, args.ssl)
