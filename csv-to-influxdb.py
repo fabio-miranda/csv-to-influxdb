@@ -92,7 +92,7 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
 
             fields = {}
             for f in fieldcolumns:
-                v = 0
+                v = 0.0
                 if f in row:
                     if (isfloat(row[f])):
                         v = float(row[f])
@@ -100,7 +100,8 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
                         v = str2bool(row[f])
                     else:
                         v = row[f]
-                fields[f] = v
+                if v:
+                    fields[f] = v
 
 
             point = {"measurement": metric, "time": timestamp, "fields": fields, "tags": tags}
