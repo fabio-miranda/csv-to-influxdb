@@ -106,7 +106,6 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
 
 
             point = {"measurement": metric, "time": timestamp, "fields": fields, "tags": tags}
-            print(force)
 
             datapoints.append(point)
             count+=1
