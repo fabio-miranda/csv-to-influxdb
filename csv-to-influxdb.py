@@ -6,6 +6,7 @@ import datetime
 from pytz import timezone
 
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBClientError
 
 epoch_naive = datetime.datetime.utcfromtimestamp(0)
 epoch = timezone('UTC').localize(epoch_naive)
@@ -47,7 +48,7 @@ def isinteger(value):
 
 def loadCsv(inputfilename, servername, user, password, dbname, metric, 
     timecolumn, timeformat, tagcolumns, fieldcolumns, usegzip, 
-    delimiter, batchsize, create, datatimezone, usessl):
+    delimiter, batchsize, create, datatimezone, usessl, force):
 
     host = servername[0:servername.rfind(':')]
     port = int(servername[servername.rfind(':')+1:])
@@ -105,6 +106,7 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
 
 
             point = {"measurement": metric, "time": timestamp, "fields": fields, "tags": tags}
+            print(force)
 
             datapoints.append(point)
             count+=1
@@ -112,13 +114,19 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
             if len(datapoints) % batchsize == 0:
                 print('Read %d lines'%count)
                 print('Inserting %d datapoints...'%(len(datapoints)))
-                response = client.write_points(datapoints)
 
-                if not response:
-                    print('Problem inserting points, exiting...')
-                    exit(1)
-
-                print("Wrote %d points, up to %s, response: %s" % (len(datapoints), datetime_local, response))
+                try: 
+                    response = client.write_points(datapoints)
+                    print("Wrote %d points, up to %s, response: %s" % (len(datapoints), datetime_local, response))
+                except InfluxDBClientError as e:
+                    print('Problem inserting points for current batch')
+                    
+                    # If force is False, raise Exception
+                    if not force:
+                        raise e 
+                    
+                    # Else continue write process
+                    print('Ignoring and moving to next batch')
 
                 datapoints = []
             
@@ -127,15 +135,16 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
     if len(datapoints) > 0:
         print('Read %d lines'%count)
         print('Inserting %d datapoints...'%(len(datapoints)))
-        response = client.write_points(datapoints)
 
-        if response == False:
-            print('Problem inserting points, exiting...')
-            exit(1)
-
-        print("Wrote %d, response: %s" % (len(datapoints), response))
-
+        try: 
+            response = client.write_points(datapoints)
+            print("Wrote %d, response: %s" % (len(datapoints), response))
+        except InfluxDBClientError as e:
+            print('Problem inserting points for current batch')
+            raise e 
+            
     print('Done')
+    
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Csv to influxdb.')
@@ -188,8 +197,11 @@ if __name__ == "__main__":
     parser.add_argument('-b', '--batchsize', type=int, default=5000,
                         help='Batch size. Default: 5000.')
 
+    parser.add_argument('-f', '--force', action='store_true', default=False,
+                        help='Program will ignore any write issues with problematic batches and attempt to write data to client for all other batches.')
+
     args = parser.parse_args()
     loadCsv(args.input, args.server, args.user, args.password, args.dbname, 
         args.metricname, args.timecolumn, args.timeformat, args.tagcolumns, 
         args.fieldcolumns, args.gzip, args.delimiter, args.batchsize, args.create, 
-        args.timezone, args.ssl)
+        args.timezone, args.ssl, args.force)
