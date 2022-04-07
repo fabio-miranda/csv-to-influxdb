@@ -83,11 +83,11 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
         reader = csv.DictReader(csvfile, delimiter=delimiter)
         for row in reader:
             if timeepoch:
-                timestamp = int(row[timecolumn])
-                time_multiplier = nanosecond_multipliers[timeepoch]
+                time_multiplier = nanosecond_multipliers.get(timeepoch)
                 if time_multiplier is None:
-                    raise ValueError("epoch percision " + str(timeepoch) +" not supported")
-                timestamp = timestamp * time_multiplier
+                    raise ValueError("epoch precision [" + str(timeepoch) +"] not supported")
+
+                timestamp = int(row[timecolumn]) * time_multiplier
                 datetime_local = timestamp
             else:
                 datetime_naive = datetime.datetime.strptime(row[timecolumn],timeformat)
