@@ -11,6 +11,13 @@ from influxdb.exceptions import InfluxDBClientError
 epoch_naive = datetime.datetime.utcfromtimestamp(0)
 epoch = timezone('UTC').localize(epoch_naive)
 
+nanosecond_multipliers = {
+    "s": 1000000000,
+    "ms": 1000000,
+    "u": 1000,
+    "ns": 1,
+}
+
 def unix_time_millis(dt):
     return int((dt - epoch).total_seconds() * 1000)
 
@@ -48,7 +55,7 @@ def isinteger(value):
 
 def loadCsv(inputfilename, servername, user, password, dbname, metric, 
     timecolumn, timeformat, tagcolumns, fieldcolumns, usegzip, 
-    delimiter, batchsize, create, datatimezone, usessl, force):
+    delimiter, batchsize, create, datatimezone, usessl, force, timeepoch):
 
     host = servername[0:servername.rfind(':')]
     port = int(servername[servername.rfind(':')+1:])
@@ -75,14 +82,22 @@ def loadCsv(inputfilename, servername, user, password, dbname, metric,
     with inputfile as csvfile:
         reader = csv.DictReader(csvfile, delimiter=delimiter)
         for row in reader:
-            datetime_naive = datetime.datetime.strptime(row[timecolumn],timeformat)
+            if timeepoch:
+                time_multiplier = nanosecond_multipliers.get(timeepoch)
+                if time_multiplier is None:
+                    raise ValueError("epoch precision [" + str(timeepoch) +"] not supported")
 
-            if datetime_naive.tzinfo is None:
-                datetime_local = timezone(datatimezone).localize(datetime_naive)
+                timestamp = int(row[timecolumn]) * time_multiplier
+                datetime_local = timestamp
             else:
-                datetime_local = datetime_naive
+                datetime_naive = datetime.datetime.strptime(row[timecolumn],timeformat)
 
-            timestamp = unix_time_millis(datetime_local) * 1000000 # in nanoseconds
+                if datetime_naive.tzinfo is None:
+                    datetime_local = timezone(datatimezone).localize(datetime_naive)
+                else:
+                    datetime_local = datetime_naive
+
+                timestamp = unix_time_millis(datetime_local) * 1000000 # in nanoseconds
 
             tags = {}
             for t in tagcolumns:
@@ -181,6 +196,9 @@ if __name__ == "__main__":
     parser.add_argument('-tf', '--timeformat', nargs='?', default='%Y-%m-%d %H:%M:%S',
                         help='Timestamp format. Default: \'%%Y-%%m-%%d %%H:%%M:%%S\' e.g.: 1970-01-01 00:00:00')
 
+    parser.add_argument('-te', '--timeepoch', nargs='?', default='s',
+                        help='Timestamp is in EPOCH format. Values: \'s\', \'ms\', \'u\', \'ns\'. Default: \'s\', e.g 1649329113')
+
     parser.add_argument('-tz', '--timezone', default='UTC',
                         help='Timezone of supplied data. Default: UTC')
 
@@ -203,4 +221,4 @@ if __name__ == "__main__":
     loadCsv(args.input, args.server, args.user, args.password, args.dbname, 
         args.metricname, args.timecolumn, args.timeformat, args.tagcolumns, 
         args.fieldcolumns, args.gzip, args.delimiter, args.batchsize, args.create, 
-        args.timezone, args.ssl, args.force)
+        args.timezone, args.ssl, args.force, args.timeepoch)

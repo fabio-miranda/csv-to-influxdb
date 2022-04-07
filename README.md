@@ -37,6 +37,8 @@ optional arguments:
   -tf [TIMEFORMAT], --timeformat [TIMEFORMAT]
                         Timestamp format. Default: '%Y-%m-%d %H:%M:%S' e.g.:
                         1970-01-01 00:00:00
+  -te [TIMEEPOCH], --timeepoch [TIMEEPOCH]
+                        Timestamp is in EPOCH format. Values: 's', 'ms', 'u', 'ns'. Default: 's', e.g 1649329113
   -tz TIMEZONE, --timezone TIMEZONE
                         Timezone of supplied data. Default: UTC
   --fieldcolumns [FIELDCOLUMNS]
